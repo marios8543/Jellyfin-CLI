@@ -4,9 +4,14 @@
 ![Image](https://i.imgur.com/I3Nbd3R.png)
 ----
 
-### How to use
+### How to install  
 This app requires Python3.6 or higher  
 You can install it by executing `pip3 install --user jellyfin-cli`  
+I recommend symlinking the script to your path so you can execute it directly from the terminal:
+This will typically require something like the following:
+`ln -s $HOME/.local/bin/jellyfin-cli /usr/bin/jellyfin-cli`
+
+### How to use
 The first time you run it, you will be greeted by a minimalist login prompt. This will repeat every time the token is invalidated.
 After that you can use the interface. Everything except music works.  
 Player-wise MPV and VLC are supported out of the box but typically any player that supports network streaming (and that doesn't require any flags) will work. You can specify a custom player path through the `PLAYER_PATH` environment variable.
