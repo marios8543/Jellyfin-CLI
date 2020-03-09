@@ -64,7 +64,7 @@ class App:
             callback = self.draw_seasons
         else:
             callback = None
-        self._add_widget(self._draw_table(items, str(view), prcnt=100, callback=callback))
+        self._add_widget(self._draw_table(items, str(view), prcnt=98, callback=callback))
 
     def draw_view(self, b, view):
         self.loop.create_task(self._draw_view(view))
@@ -72,7 +72,7 @@ class App:
     async def _draw_seasons(self, series):
         seasons = await series.get_seasons()
         self.widgets = []
-        self._add_widget(self._draw_table(seasons, str(series), prcnt=100, callback=self.draw_episodes))
+        self._add_widget(self._draw_table(seasons, str(series), prcnt=98, callback=self.draw_episodes))
 
     def draw_seasons(self, b, series):
         self.loop.create_task(self._draw_seasons(series))
@@ -80,7 +80,7 @@ class App:
     async def _draw_episodes(self, season):
         episodes = await season.get_episodes()
         self.widgets = []
-        self._add_widget(self._draw_table(episodes, "{} - {}".format(season.show, season), prcnt=100))
+        self._add_widget(self._draw_table(episodes, "{} - {}".format(season.show, season), prcnt=98))
 
     def draw_episodes(self, b, season):
         self.loop.create_task(self._draw_episodes(season))
@@ -94,7 +94,7 @@ class App:
         self.loop.create_task(self._play(item))
 
     async def render_home(self):
-        self.widgets = []
+        self.widgets = [urwid.Text("Logged in as {}".format(self.client.context.username)), urwid.Divider(bottom=1)]
         await self._add_views()
         await self._add_tables()
 
@@ -105,6 +105,6 @@ class App:
     def __call__(self):
         return self._run()
 
+app = App()
 if __name__ == "__main__":
-    app = App()
     app()

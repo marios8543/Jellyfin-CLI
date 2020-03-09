@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='Jellyfin-CLI',  
-     version='0.1',
+     version='0.4',
      scripts=['jellyfin-cli'] ,
      author="marios8543",
      author_email="marios8543@gmail.com",
@@ -19,4 +19,13 @@ setuptools.setup(
          "License :: OSI Approved :: MIT License",
          "Operating System :: OS Independent",
      ],
+     entry_points={
+         "console_scripts": [
+             "jellyfin-cli = jellyfin_cli.main:app"
+         ]
+     },
+     install_requires=[
+         "aiohttp",
+         "urwid"
+     ]
  )
