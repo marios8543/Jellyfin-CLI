@@ -1,6 +1,8 @@
 from aiohttp import ClientSession
 from jellyfin_cli.jellyfin_client.data_classes.View import View
-from jellyfin_cli.jellyfin_client.data_classes.Shows import Episode
+from jellyfin_cli.jellyfin_client.data_classes.Shows import Episode, Show
+from jellyfin_cli.jellyfin_client.data_classes.Movies import Movie
+from jellyfin_cli.jellyfin_client.data_classes.Audio import Song
 
 class InvalidCredentialsError(Exception):
     def __init__(self):
@@ -95,5 +97,53 @@ class HttpClient:
         if res.status == 200:
             res = await res.json()
             return [Episode(r, self.context) for r in res["Items"]]
+        else:
+            raise HttpError(await res.text())
+
+    async def search(self, query, media_type, limit=30):
+        res = await self.context.client.get("{}/Users/{}/Items".format(self.context.url, self.context.user_id), params={
+            "searchTerm": query,
+            "IncludeItemTypes": media_type,
+            "IncludeMedia": "true",
+            "IncludePeople": "false",
+            "IncludeGenres": "false",
+            "IncludeStudios": "false",
+            "IncludeArtists": "false",
+            "Fields": "BasicSyncInfo",
+            "Recursive": "true",
+            "Limit": limit
+        })
+        if res.status == 200:
+            res = await res.json()
+            r = []
+            for i in res["Items"]:
+                if i["Type"] == "Movie":
+                    r.append(Movie(i, self.context))
+                elif i["Type"] == "Audio":
+                    r.append(Song(i, self.context))
+                elif i["Type"] == "Series":
+                    r.append(Show(i, self.context))
+                elif i["Type"] == "Episode":
+                    r.append(Episode(i, self.context))
+            return r
+        else:
+            raise HttpError(await res.text())
+
+    async def get_recommended(self, limit=30):
+        res = await self.context.client.get("{}/Users/{}/Items".format(self.context.url, self.context.user_id), params={
+            "SortBy": "IsFavoriteOrLiked,Random",
+            "IncludeItemTypes": "Movie,Series",
+            "Recursive": "true",
+            "Limit": limit
+        })
+        if res.status == 200:
+            res = await res.json()
+            r = []
+            for i in res["Items"]:
+                if i["Type"] == "Movie":
+                    r.append(Movie(i, self.context))
+                elif i["Type"] == "Series":
+                    r.append(Show(i, self.context))
+            return r
         else:
             raise HttpError(await res.text())

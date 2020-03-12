@@ -19,7 +19,10 @@ class Season:
     def __init__(self, res, show):
         self.id = res["Id"]
         self.name = res["Name"]
-        self.index = res["IndexNumber"]
+        if "IndexNumber" in res:
+            self.index = res["IndexNumber"]
+        else:
+            self.index = 0
         self.is_folder = res["IsFolder"]
         self.show = show
     
