@@ -76,8 +76,8 @@ class App:
         self._add_widget(columns)
         resume = await self.client.get_resume()
         nextup = await self.client.get_nextup()
-        self._add_widget(self._draw_table(resume,"Continue Watching"))
-        self._add_widget(self._draw_table(nextup, "Next Up"))
+        self._add_widget(self._draw_table(resume,"Continue Watching", prcnt=30))
+        self._add_widget(self._draw_table(nextup, "Next Up", prcnt=28))
         self._add_widget(urwid.Text("Tab: Go back | s: Search"))
         self.previous_key_callback = (None, None)
 
