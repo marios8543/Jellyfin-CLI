@@ -1,6 +1,7 @@
 from jellyfin_cli.jellyfin_client.JellyfinClient import HttpClient, InvalidCredentialsError, ServerContext, HttpError
 from aiohttp import ClientSession
 from json import load, dump
+from getpass import getpass
 
 async def login():
     try:
@@ -13,7 +14,7 @@ async def login():
         if server.endswith("/"):
             server = server[:-1]
         username = input("Enter the username: ")
-        password = input("Enter the password: ")
+        password = getpass("Enter the password: ")
         client = HttpClient(server)
         try:
             await client.login(username, password)
