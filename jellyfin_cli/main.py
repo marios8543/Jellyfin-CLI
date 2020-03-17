@@ -1,9 +1,8 @@
 from jellyfin_cli.utils.login_helper import login
 from jellyfin_cli.utils.play_utils import Player
 from asyncio import get_event_loop, sleep
-from concurrent.futures import ThreadPoolExecutor
-import urwid
 from jellyfin_cli.urwid_overrides.Button import ButtonNoArrows as Button
+import urwid
 
 def calculate_percentage(rows, prcnt):
     return int((rows/100)*prcnt)
@@ -26,6 +25,7 @@ class App:
         self._last_view = self.draw_search
         self.search_query = ""
         self.search_edit = urwid.Edit("Enter your search query...", edit_text=self.search_query)
+        self.bottom_widget = urwid.Text("Tab: Go back | s: Search")
 
     def _process_keypress(self, key):
         if key == "tab":
@@ -38,6 +38,9 @@ class App:
                 pass
         elif key == "s":
             self.draw_search(None, "")
+        elif key == "p":
+            if self.player.playing:
+                self.player.pause()
 
     def _draw_table(self, items, title=None, prcnt=30, callback=None):
         if not callback:
@@ -78,15 +81,17 @@ class App:
         nextup = await self.client.get_nextup()
         self._add_widget(self._draw_table(resume,"Continue Watching", prcnt=30))
         self._add_widget(self._draw_table(nextup, "Next Up", prcnt=28))
-        self._add_widget(urwid.Text("Tab: Go back | s: Search"))
+        self._add_widget(self.bottom_widget)
         self.previous_key_callback = (None, None)
 
     def draw_home(self):
         self.loop.create_task(self._draw_home())
 
     async def _draw_view(self, view):
-        items = await view.get_items(limit=500)
         self._clear_widgets()
+        if view.view_type == "Audio":
+            return await self._draw_audio(view)
+        items = await view.get_items(limit=500)
         if view.view_type == "Series":
             callback = self.draw_seasons
         else:
@@ -97,6 +102,25 @@ class App:
 
     def draw_view(self, b, view):
         self.loop.create_task(self._draw_view(view))
+
+    async def _draw_audio(self, view):
+        latest = await view.get_latest(limit=16)
+        recent = await view.get_items()
+        frequent = await view.get_items(sort="PlayCount", limit=8)
+        self._add_widget(self._draw_table(latest, title="Latest Music", callback=self.draw_album, prcnt=15))
+        self._add_widget(self._draw_table(recent, title="Recently Played", callback=self.play_bg, prcnt=40))
+        self._add_widget(self._draw_table(frequent, title="Frequently Played", callback=self.play_bg, prcnt=15))
+        self._last_view = view
+        self.previous_key_callback = (self.draw_home, None)
+    
+    async def _draw_album(self, album):
+        items = await album.get_songs()
+        self._clear_widgets()
+        self._add_widget(self._draw_table(items, title=album.name, prcnt=97, callback=self.play_bg))
+        self.previous_key_callback = (self.draw_view, (None, self._last_view))
+
+    def draw_album(self, b, album):
+        self.loop.create_task(self._draw_album(album))
 
     async def _draw_seasons(self, series):
         seasons = await series.get_seasons()
@@ -142,9 +166,25 @@ class App:
         self._empty_screen()
         await self.player._play(item)
         self._draw_screen()
+
+    async def _bg_play(self , item):
+        await self.player._play(item, block=False)
+        while self.player.playing:
+            play_string = self.player.get_playback_string()
+            if not self.previous_key_callback[0]:
+                self.draw.widget.body.contents[-2][0].set_text(play_string)
+                self.draw.draw_screen()
+            await sleep(1)
+        self.bottom_widget = urwid.Text("Tab: Go back | s: Search")
     
-    def play(self, b, item):
-        self.loop.create_task(self._play(item))
+    def play(self, b, item, bg=False):
+        if bg:
+            self.loop.create_task(self._bg_play(item))
+        else:
+            self.loop.create_task(self._play(item))
+
+    def play_bg(self, b, item):
+        self.play(b, item, bg=True)
 
     def _run(self):
         self.draw_home()

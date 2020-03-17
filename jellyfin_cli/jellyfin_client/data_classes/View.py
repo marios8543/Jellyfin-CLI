@@ -1,6 +1,6 @@
 from jellyfin_cli.jellyfin_client.data_classes.Shows import Show
 from jellyfin_cli.jellyfin_client.data_classes.Movies import Movie
-from jellyfin_cli.jellyfin_client.data_classes.Audio import Song
+from jellyfin_cli.jellyfin_client.data_classes.Audio import Album, Audio
 
 class HttpError(Exception):
     pass
@@ -12,19 +12,24 @@ class View:
         self.etag = res["Etag"]
         self.parent_id = res["ParentId"]
         if res["CollectionType"] == "movies":
+            self.sort = "DateCreated,SortName,ProductionYear"
             self.view_type = "Movie"
         elif res["CollectionType"] == "tvshows":
+            self.sort = "DateCreated,SortName,ProductionYear"
             self.view_type = "Series"
         elif res["CollectionType"] == "music":
+            self.sort = "DatePlayed"
             self.view_type = "Audio"
         self.context = context
 
     def __str__(self):
         return self.name
 
-    async def get_items(self, start=0, limit=100):
+    async def get_items(self, start=0, limit=100, sort=None):
+        if not sort:
+            sort = self.sort
         res = await self.context.client.get("{}/Users/{}/Items".format(self.context.url,self.context.user_id), params={
-            "SortBy": "DateCreated,SortName,ProductionYear",
+            "SortBy": self.sort,
             "SortOrder": "Descending",
             "Recursive": "true",
             "Fields": "PrimaryImageAspectRatio%2CMediaSourceCount,BasicSyncInfo",
@@ -42,7 +47,7 @@ class View:
                 if i["Type"] == "Movie":
                     r.append(Movie(i, self.context))
                 elif i["Type"] == "Audio":
-                    r.append(Song(i, self.context))
+                    r.append(Audio(i, self.context))
                 elif i["Type"] == "Series":
                     r.append(Show(i, self.context))
             return r
@@ -50,9 +55,6 @@ class View:
             raise HttpError(await res.text())
 
     async def get_latest(self, limit=30):
-        #TODO: Implement audio stuff
-        if self.view_type == "Audio":
-            raise NotImplementedError()
         res = await self.context.client.get("{}/Users/{}/Items/Latest".format(self.context.url, self.context.user_id), params={
             "Limit": limit,
             "ParentId": self.id,
@@ -65,9 +67,11 @@ class View:
                 if i["Type"] == "Movie":
                     r.append(Movie(i, self.context))
                 elif i["Type"] == "Audio":
-                    r.append(Song(i, self.context))
+                    r.append(Audio(i, self.context))
                 elif i["Type"] == "Series":
                     r.append(Show(i, self.context))
+                elif i["Type"] == "MusicAlbum":
+                    r.append(Album(i, self.context))
             return r
         else:
             raise HttpError(await res.text())

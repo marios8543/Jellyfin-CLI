@@ -6,7 +6,10 @@ class Item:
         self.name = res["Name"]
         self.is_folder = res["IsFolder"]
         self.played = res["UserData"]["Played"]
-
+        if "RunTimeTicks" in res:
+            self.ticks = res["RunTimeTicks"]
+        else:
+            self.ticks = 9
         self.context = context
 
     def __str__(self):

@@ -2,7 +2,6 @@ from aiohttp import ClientSession
 from jellyfin_cli.jellyfin_client.data_classes.View import View
 from jellyfin_cli.jellyfin_client.data_classes.Shows import Episode, Show
 from jellyfin_cli.jellyfin_client.data_classes.Movies import Movie
-from jellyfin_cli.jellyfin_client.data_classes.Audio import Song
 
 class InvalidCredentialsError(Exception):
     def __init__(self):

@@ -1,2 +1,3 @@
 aiohttp
 urwid
+aio-mpv-jsonipc
