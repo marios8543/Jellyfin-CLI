@@ -69,7 +69,11 @@ class Player:
         self.position = 0
         self.duration = int(ticks_to_seconds(item.ticks))
         self.playing = True
-        key = await self._get_api_key()
+        try:
+            key = await self._get_api_key()
+        except:
+            key = self.context.get_token()
+            print("Could not create API token. I will use your login token. Be careful to not leak it!")
         url = "{}/Items/{}/Download?api_key={}".format(self.context.url, item.id, key)
         self.mpv = MPV(media=url)
         await self.mpv.start()
