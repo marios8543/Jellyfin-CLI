@@ -25,7 +25,6 @@ class App:
         self._last_view = self.draw_search
         self.search_query = ""
         self.search_edit = urwid.Edit("Enter your search query...", edit_text=self.search_query)
-        self.bottom_widget = urwid.Text("Tab: Go back | s: Search")
 
     def _process_keypress(self, key):
         if key == "tab":
@@ -41,6 +40,8 @@ class App:
         elif key == "p":
             if self.player.playing:
                 self.player.pause()
+        elif key == "q":
+            raise urwid.ExitMainLoop()
 
     def _draw_table(self, items, title=None, prcnt=30, callback=None):
         if not callback:
@@ -81,7 +82,7 @@ class App:
         nextup = await self.client.get_nextup()
         self._add_widget(self._draw_table(resume,"Continue Watching", prcnt=30))
         self._add_widget(self._draw_table(nextup, "Next Up", prcnt=28))
-        self._add_widget(self.bottom_widget)
+        self._add_widget(urwid.Text("Tab: Go back | s: Search | p: Play/Pause | q: Exit"))
         self.previous_key_callback = (None, None)
 
     def draw_home(self):
@@ -90,18 +91,33 @@ class App:
     async def _draw_view(self, view):
         self._clear_widgets()
         if view.view_type == "Audio":
-            return await self._draw_audio(view)
-        items = await view.get_items(limit=500)
-        if view.view_type == "Series":
-            callback = self.draw_seasons
+            await self._draw_audio(view)
+        elif view.view_type == "Playlist":
+            self._last_view = view
+            items = await view.get_items()
+            self._add_widget(self._draw_table(items, view.name, prcnt=98, callback=self.draw_playlist))
         else:
-            callback = None
-        self._add_widget(self._draw_table(items, str(view), prcnt=96, callback=callback))
-        self._last_view = view
+            items = await view.get_items(limit=500)
+            if view.view_type == "Series":
+                callback = self.draw_seasons
+            else:
+                callback = None
+            self._add_widget(self._draw_table(items, str(view), prcnt=96, callback=callback))
+            self._last_view = view
         self.previous_key_callback = (self.draw_home, None)
 
     def draw_view(self, b, view):
         self.loop.create_task(self._draw_view(view))
+
+    async def _draw_playlist(self, playlist):
+        items = await playlist.get_items()
+        callbacks = {"Movie":self.play, "Episode": self.play, "Audio": self.play_bg}
+        self._clear_widgets()
+        self._add_widget(self._draw_table(items, playlist.name, prcnt=98, callback=lambda i: callbacks[i.__class__.__name__]))
+        self.previous_key_callback = (self.draw_view, (None, self._last_view))
+    
+    def draw_playlist(self, b, playlist):
+        self.loop.create_task(self._draw_playlist(playlist))
 
     async def _draw_audio(self, view):
         latest = await view.get_latest(limit=16)
@@ -172,10 +188,12 @@ class App:
         while self.player.playing:
             play_string = self.player.get_playback_string()
             if not self.previous_key_callback[0]:
-                self.draw.widget.body.contents[-2][0].set_text(play_string)
-                self.draw.draw_screen()
+                try:
+                    self.draw.widget.body.contents[-2][0].set_text(play_string)
+                    self.draw.draw_screen()
+                except:
+                    break
             await sleep(1)
-        self.bottom_widget = urwid.Text("Tab: Go back | s: Search")
     
     def play(self, b, item, bg=False):
         if bg:

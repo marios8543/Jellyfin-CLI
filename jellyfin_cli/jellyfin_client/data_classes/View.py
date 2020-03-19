@@ -1,6 +1,7 @@
 from jellyfin_cli.jellyfin_client.data_classes.Shows import Show
 from jellyfin_cli.jellyfin_client.data_classes.Movies import Movie
 from jellyfin_cli.jellyfin_client.data_classes.Audio import Album, Audio
+from jellyfin_cli.jellyfin_client.data_classes.Items import Playlist
 
 class HttpError(Exception):
     pass
@@ -10,7 +11,7 @@ class View:
         self.name = res["Name"]
         self.id = res["Id"]
         self.etag = res["Etag"]
-        self.parent_id = res["ParentId"]
+        self.parent_id = res["ParentId"] if "ParentId" in res else None
         if res["CollectionType"] == "movies":
             self.sort = "DateCreated,SortName,ProductionYear"
             self.view_type = "Movie"
@@ -20,6 +21,9 @@ class View:
         elif res["CollectionType"] == "music":
             self.sort = "DatePlayed"
             self.view_type = "Audio"
+        elif res["CollectionType"] == "playlists":
+            self.sort = "IsFolder,SortName"
+            self.view_type = "Playlist"
         self.context = context
 
     def __str__(self):
@@ -32,9 +36,7 @@ class View:
             "SortBy": self.sort,
             "SortOrder": "Descending",
             "Recursive": "true",
-            "Fields": "PrimaryImageAspectRatio%2CMediaSourceCount,BasicSyncInfo",
-            "ImageTypeLimit": "1",
-            "EnableImageTypes": "Primary%2CBackdrop%2CBanner%2CThumb",
+            "Fields": "BasicSyncInfo",
             "StartIndex": start,
             "Limit": limit,
             "ParentId": self.id,
@@ -50,6 +52,8 @@ class View:
                     r.append(Audio(i, self.context))
                 elif i["Type"] == "Series":
                     r.append(Show(i, self.context))
+                elif i["Type"] == "Playlist":
+                    r.append(Playlist(i, self.context))
             return r
         else:
             raise HttpError(await res.text())

@@ -96,6 +96,7 @@ class Player:
             get_event_loop().create_task(self.mpv.send(["set_property", "pause", True]))
 
     async def stop(self):
+        self.playing = False
         try:
             await self.mpv.stop()
         except:
