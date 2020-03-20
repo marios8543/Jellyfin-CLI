@@ -162,10 +162,19 @@ class App:
             movies = await self.client.search(self.search_query, "Movie")
             shows = await self.client.search(self.search_query, "Series")
             episodes = await self.client.search(self.search_query, "Episode")
+            songs = await self.client.search(self.search_query, "Audio")
+            albums = await self.client.search(self.search_query, "MusicAlbum")
             self._add_widget(self.search_edit)
-            self._add_widget(self._draw_table(movies, "Movies", callback=self.play, prcnt=20))
-            self._add_widget(self._draw_table(shows, "Shows", callback=self.draw_seasons, prcnt=20))
-            self._add_widget(self._draw_table(episodes, "Episodes", callback=self.play, prcnt=20))
+            if movies:
+                self._add_widget(self._draw_table(movies, "Movies", callback=self.play, prcnt=20))
+            if shows:
+                self._add_widget(self._draw_table(shows, "Shows", callback=self.draw_seasons, prcnt=20))
+            if episodes:
+                self._add_widget(self._draw_table(episodes, "Episodes", callback=self.play, prcnt=20))
+            if songs:
+                self._add_widget(self._draw_table(songs, "Songs", callback=self.play_bg, prcnt=20))
+            if albums:
+                self._add_widget(self._draw_table(albums, "Albums", callback=self.draw_album, prcnt=20))
         else:
             urwid.connect_signal(self.search_edit, "change", self.draw_search)
             recommended = await self.client.get_recommended()

@@ -12,7 +12,7 @@ class Album(Item):
         super().__init__(res, context)
         self.artists = res["Artists"]
         self.album_artist = res["AlbumArtist"] if "AlbumArtist" in res and res["AlbumArtist"] else "Unknown Artist"
-        self.item_count = res["ChildCount"]
+        self.item_count = res["ChildCount"] if "ChildCount" in res else 0
 
     async def get_songs(self, sort="SortName"):
         res = await self.context.client.get("{}/Users/{}/Items".format(self.context.url, self.context.user_id), params={

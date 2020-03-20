@@ -2,6 +2,7 @@ from aiohttp import ClientSession
 from jellyfin_cli.jellyfin_client.data_classes.View import View
 from jellyfin_cli.jellyfin_client.data_classes.Shows import Episode, Show
 from jellyfin_cli.jellyfin_client.data_classes.Movies import Movie
+from jellyfin_cli.jellyfin_client.data_classes.Audio import Audio, Album
 
 class InvalidCredentialsError(Exception):
     def __init__(self):
@@ -119,11 +120,13 @@ class HttpClient:
                 if i["Type"] == "Movie":
                     r.append(Movie(i, self.context))
                 elif i["Type"] == "Audio":
-                    r.append(Song(i, self.context))
+                    r.append(Audio(i, self.context))
                 elif i["Type"] == "Series":
                     r.append(Show(i, self.context))
                 elif i["Type"] == "Episode":
                     r.append(Episode(i, self.context))
+                elif i["Type"] == "MusicAlbum":
+                    r.append(Album(i, self.context))
             return r
         else:
             raise HttpError(await res.text())
