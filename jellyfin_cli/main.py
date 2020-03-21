@@ -41,7 +41,12 @@ class App:
             if self.player.playing:
                 self.player.pause()
         elif key == "q":
-            raise urwid.ExitMainLoop()
+            def _(x=None):
+                raise urwid.ExitMainLoop()
+            if self.player.playing:
+                task = self.loop.create_task(self.player.stop())
+                task.add_done_callback(_)
+            _()
 
     def _draw_table(self, items, title=None, prcnt=30, callback=None):
         if not callback:
