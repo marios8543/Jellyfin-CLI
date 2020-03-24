@@ -21,6 +21,8 @@ class Player:
         self.playing = False
         self.paused = False
 
+        self.played = False
+
     async def _get_api_keys(self):
         res = await self.context.client.get("{}/Auth/Keys".format(self.context.url))
         if res.status == 200:
@@ -43,22 +45,16 @@ class Player:
         await self.context.client.delete("{}/Auth/Keys/{}".format(self.context.url, key))
 
     
-    async def _send_progress(self):
-        await self.context.client.post("{}/Sessions/Playing/Progress".format(self.context.url), json={
-            "EventName": "timeupdate",
-            "ItemId": self.item.id,
-            "MediaSourceId": self.item.id,
-            "PositionTicks": seconds_to_ticks(self.position)
-        })
-
-    async def _progress_loop(self):
-        while self.playing:
-            await self._send_progress()
-            await sleep(10)
     
     async def _update_time(self, time):
         try:
             self.position = int(time)
+            prcnt = (self.position/self.duration)*100
+            if prcnt > 70 and not self.played:
+                get_event_loop().create_task(self.context.client.post(
+                    "{}/Users/{}/PlayedItems/{}".format(self.context.url, self.context.user_id, self.item.id)
+                ))
+                self.played = True
         except:
             pass
 
@@ -69,6 +65,7 @@ class Player:
         self.position = 0
         self.duration = int(ticks_to_seconds(item.ticks))
         self.playing = True
+        self.played = False
         try:
             key = await self._get_api_key()
         except:
