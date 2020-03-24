@@ -13,7 +13,9 @@ class Item:
         self.context = context
 
     def __str__(self):
-        return self.name
+        subbed = self.subbed if hasattr(self,"subbed") else False
+        played = self.played if hasattr(self,"played") else False
+        return "{}{} {}".format("[P] " if played else "", self.name, "[Subtitled]" if subbed else "")
 
 class Playlist(Item):
     def __init__(self, res, context):

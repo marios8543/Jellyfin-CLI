@@ -24,9 +24,6 @@ class Season(Item):
             self.index = 0
         self.is_folder = res["IsFolder"]
         self.show = show
-    
-    def __str__(self):
-        return self.name
 
     async def get_episodes(self):
         res = await self.context.client.get("{}/Shows/{}/Episodes".format(self.context.url, self.show.id), params={
@@ -46,6 +43,3 @@ class Episode(Item):
         self.subbed = res["HasSubtitles"] if "HasSubtitles" in res else False
 
         self.context = context
-
-    def __str__(self):
-        return "{} {}".format(self.name, "[Subtitled]" if self.subbed else "")

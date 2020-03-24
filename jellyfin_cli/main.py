@@ -24,7 +24,7 @@ class App:
 
         self._last_view = self.draw_search
         self.search_query = ""
-        self.search_edit = urwid.Edit("Enter your search query...", edit_text=self.search_query)
+        self.search_edit = urwid.Edit("Search: ", edit_text=self.search_query)
 
     def _process_keypress(self, key):
         if key == "tab":
