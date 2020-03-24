@@ -119,7 +119,7 @@ class App:
         callbacks = {"Movie":self.play, "Episode": self.play, "Audio": self.play_bg}
         self._clear_widgets()
         self._add_widget(self._draw_table(items, playlist.name, prcnt=98, callback=lambda i: callbacks[i.__class__.__name__]))
-        self.previous_key_callback = (self.draw_view, (None, self._last_view))
+        self.previous_key_callback = (self.draw_view, (None, self._last_view)) if not callable(self._last_view) else (self._last_view, (None,None))
     
     def draw_playlist(self, b, playlist):
         self.loop.create_task(self._draw_playlist(playlist))
@@ -147,7 +147,7 @@ class App:
         seasons = await series.get_seasons()
         self._clear_widgets()
         self._add_widget(self._draw_table(seasons, str(series), prcnt=96, callback=self.draw_episodes))
-        self.previous_key_callback = (self.draw_view, (None, self._last_view))
+        self.previous_key_callback = (self.draw_view, (None, self._last_view)) if not callable(self._last_view) else (self._last_view, (None,None))
 
     def draw_seasons(self, b, series, callback=None):
         self.loop.create_task(self._draw_seasons(series))
