@@ -138,7 +138,7 @@ class App:
         items = await album.get_songs()
         self._clear_widgets()
         self._add_widget(self._draw_table(items, title=album.name, prcnt=97, callback=self.play_bg))
-        self.previous_key_callback = (self.draw_view, (None, self._last_view))
+        self.previous_key_callback = (self.draw_view, (None, self._last_view)) if not callable(self._last_view) else (self._last_view, (None, None))
 
     def draw_album(self, b, album):
         self.loop.create_task(self._draw_album(album))
@@ -189,7 +189,7 @@ class App:
         self.previous_key_callback = (lambda: [self.draw_home(), urwid.disconnect_signal(self.search_edit, "change", self.draw_search), self._clear_search()], (None))
 
     def draw_search(self, e, text):
-        self.search_query = text
+        self.search_query = text if text is not None else ""
         self.loop.create_task(self._draw_search())
 
     async def _play(self, item):
