@@ -100,7 +100,11 @@ class App:
         elif view.view_type == "Playlist":
             self._last_view = view
             items = await view.get_items()
-            self._add_widget(self._draw_table(items, view.name, prcnt=98, callback=self.draw_playlist))
+            self._add_widget(self._draw_table(items, str(view), prcnt=98, callback=self.draw_playlist))
+        elif view.view_type == "Mixed":
+            items = await view.get_items(limit=500)
+            callbacks = {"Movie":self.play, "Show": self.draw_seasons, "Episode": self.play, "Audio": self.play_bg, "Album": self.draw_album}
+            self._add_widget(self._draw_table(items, str(view), prcnt=98, callback=lambda i: callbacks[i.__class__.__name__]))
         else:
             items = await view.get_items(limit=500)
             if view.view_type == "Series":
@@ -108,7 +112,7 @@ class App:
             else:
                 callback = None
             self._add_widget(self._draw_table(items, str(view), prcnt=96, callback=callback))
-            self._last_view = view
+        self._last_view = view
         self.previous_key_callback = (self.draw_home, None)
 
     def draw_view(self, b, view):
