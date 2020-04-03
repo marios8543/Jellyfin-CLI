@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='Jellyfin-CLI',
-    version='1.4.1',
+    version='1.5',
     scripts=['jellyfin-cli'],
     author="marios8543",
     author_email="marios8543@gmail.com",
