@@ -43,7 +43,7 @@ class HttpClient:
 
     async def login(self, username, password):
         try:
-            res = await self.client.post(self.server+'/Users/authenticatebyname',data={
+            res = await self.client.post(self.server+'/Users/authenticatebyname',json={
                 "Username": username,
                 "Pw": password
             }, headers={
