@@ -133,4 +133,8 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
-jellyfin_cli/creds.json
+
+#generic-user1: updated creds.json gitignore rule 
+#to apply in any subdirectory, including the repository root
+creds.json
+*/creds.json
