@@ -33,10 +33,10 @@ class Player:
         keys = await self._get_api_keys()
         if "jellyfin_cli_play" in keys:
             return keys["jellyfin_cli_play"]
-        else:    
-            await self.context.client.post("{}/Auth/Keys".format(self.context.url), data={
-                "App": "jellyfin_cli_play"
-            })
+        else:  
+            #NOTE: The app name MUST be specified as a query param.
+            #Jellyfin 10.7.7 WILL NOT accept the name as a POST payload. I have no idea why.
+            await self.context.client.post(f"{self.context.url}/Auth/Keys?app=jellyfin_cli_play")
             return await self._get_api_key()
 
     async def _delete_api_key(self, key=None):
