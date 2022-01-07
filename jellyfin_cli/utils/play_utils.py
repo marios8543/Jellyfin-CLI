@@ -3,6 +3,7 @@ from os import devnull, getenv
 from aio_mpv_jsonipc import MPV
 from asyncio import get_event_loop, sleep
 from datetime import timedelta
+from jellyfin_cli.jellyfin_client.JellyfinClient import HttpError
 
 def ticks_to_seconds(ticks):
     return int(ticks*(1/10000000))
@@ -33,11 +34,22 @@ class Player:
         keys = await self._get_api_keys()
         if "jellyfin_cli_play" in keys:
             return keys["jellyfin_cli_play"]
-        else:  
-            #NOTE: The app name MUST be specified as a query param.
-            #Jellyfin 10.7.7 WILL NOT accept the name as a POST payload. I have no idea why.
-            await self.context.client.post(f"{self.context.url}/Auth/Keys?app=jellyfin_cli_play")
-            return await self._get_api_key()
+        else:
+            #submit request for key a limited number of times
+            maxAttempts = 10
+            for _ in range(maxAttempts):
+                #NOTE: The app name MUST be specified as a query param.
+                #Jellyfin 10.7.7 WILL NOT accept the name as a POST payload. I have no idea why.
+                result = await self.context.client.post(f"{self.context.url}/Auth/Keys?app=jellyfin_cli_play")
+                if result.ok:
+                    return await self._get_api_key()
+                else:
+                    #if request failed, retry after delay
+                    await sleep(1)
+                    continue
+                
+            #raise error if still failed after max_retries
+            raise HttpError(f"Failed to create API key after {maxAttempts} attempts")       
 
     async def _delete_api_key(self, key=None):
         if not key:
