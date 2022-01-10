@@ -149,3 +149,11 @@ class HttpClient:
             return r
         else:
             raise HttpError(await res.text())
+
+    #verifies that the login token is valid by running a request using it
+    #raises an HttpError if the token is invalid
+    async def test_token(self):
+
+        response = await self.context.client.get(f"{self.server}/Users/Me")
+        if response.status != 200:
+            raise HttpError(await response.text())
