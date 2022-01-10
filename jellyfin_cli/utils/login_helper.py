@@ -38,5 +38,5 @@ async def load_creds():
     with open("creds.json", "r") as f:
         dc = load(f)
         client = HttpClient(dc["url"], ServerContext(cfg=dc))
-        await client.get_views()
+        await client.test_token()
         return client
